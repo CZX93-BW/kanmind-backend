@@ -12,6 +12,7 @@ from .permissions import IsBoardOwnerOrMember
 from .serializers import (
     BoardDetailSerializer,
     BoardSummarySerializer,
+    BoardUpdateResponseSerializer,
     BoardWriteSerializer,
 )
 
@@ -20,7 +21,7 @@ class BoardViewSet(ModelViewSet):
     permission_classes = [IsAuthenticated, IsBoardOwnerOrMember]
     serializer_class = BoardWriteSerializer
     pagination_class = None
-    http_method_names = ["get", "post", "head", "options"]
+    http_method_names = ["get", "post", "patch", "head", "options"]
 
     queryset = Board.objects.annotate(
         member_count=Count("members", distinct=True),
@@ -74,3 +75,14 @@ class BoardViewSet(ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
+
+    @transaction.atomic
+    def partial_update(self, request, *args, **kwargs):
+        board = self.get_object()
+        serializer = self.get_serializer(
+            board, data=request.data, partial=True
+        )
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        response_data = BoardUpdateResponseSerializer(serializer.instance).data
+        return Response(response_data, status=status.HTTP_200_OK)

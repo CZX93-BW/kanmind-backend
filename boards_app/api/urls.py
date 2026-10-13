@@ -13,7 +13,10 @@ urlpatterns = [
     ),
     path(
         "boards/<int:pk>/",
-        BoardViewSet.as_view({"get": "retrieve"}),
+        BoardViewSet.as_view({
+            "get": "retrieve",
+            "patch": "partial_update",
+        }),
         name="board-detail",
     ),
 ]
