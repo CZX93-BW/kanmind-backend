@@ -1,5 +1,5 @@
 from django.db import transaction
-from django.db.models import Count, Q
+from django.db.models import Count, Prefetch, Q
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -8,11 +8,16 @@ from rest_framework.viewsets import ModelViewSet
 from boards_app.models import Board
 from tasks_app.models import Task
 
-from .serializers import BoardSummarySerializer, BoardWriteSerializer
+from .permissions import IsBoardOwnerOrMember
+from .serializers import (
+    BoardDetailSerializer,
+    BoardSummarySerializer,
+    BoardWriteSerializer,
+)
 
 
 class BoardViewSet(ModelViewSet):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsBoardOwnerOrMember]
     serializer_class = BoardWriteSerializer
     pagination_class = None
     http_method_names = ["get", "post", "head", "options"]
@@ -33,14 +38,29 @@ class BoardViewSet(ModelViewSet):
     ).order_by("id")
 
     def get_queryset(self):
-        user = self.request.user
-        return super().get_queryset().filter(
-            Q(owner=user) | Q(members=user)
-        ).distinct()
+        queryset = super().get_queryset()
+        if self.action == "list":
+            user = self.request.user
+            return queryset.filter(
+                Q(owner=user) | Q(members=user)
+            ).distinct()
+        if self.action == "retrieve":
+            return self.get_detail_queryset()
+        return queryset
+
+    def get_detail_queryset(self):
+        tasks = Task.objects.select_related("assignee", "reviewer")
+        tasks = tasks.annotate(comments_count=Count("comments")).order_by("id")
+        return Board.objects.prefetch_related(
+            "members",
+            Prefetch("tasks", queryset=tasks),
+        )
 
     def get_serializer_class(self):
         if self.action == "list":
             return BoardSummarySerializer
+        if self.action == "retrieve":
+            return BoardDetailSerializer
         return BoardWriteSerializer
 
     @transaction.atomic

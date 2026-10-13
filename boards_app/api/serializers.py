@@ -1,7 +1,9 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
+from auth_app.api.serializers import UserSerializer
 from boards_app.models import Board
+from tasks_app.api.serializers import BoardTaskSerializer
 
 
 User = get_user_model()
@@ -37,4 +39,15 @@ class BoardSummarySerializer(serializers.ModelSerializer):
             "tasks_high_prio_count",
             "owner_id",
         )
+        read_only_fields = fields
+
+
+class BoardDetailSerializer(serializers.ModelSerializer):
+    owner_id = serializers.IntegerField(read_only=True)
+    members = UserSerializer(many=True, read_only=True)
+    tasks = BoardTaskSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Board
+        fields = ("id", "title", "owner_id", "members", "tasks")
         read_only_fields = fields

@@ -11,4 +11,9 @@ urlpatterns = [
         BoardViewSet.as_view({"get": "list", "post": "create"}),
         name="board-list",
     ),
+    path(
+        "boards/<int:pk>/",
+        BoardViewSet.as_view({"get": "retrieve"}),
+        name="board-detail",
+    ),
 ]
