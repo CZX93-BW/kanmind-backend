@@ -8,7 +8,7 @@ app_name = "boards_app"
 urlpatterns = [
     path(
         "boards/",
-        BoardViewSet.as_view({"post": "create"}),
+        BoardViewSet.as_view({"get": "list", "post": "create"}),
         name="board-list",
     ),
 ]

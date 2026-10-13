@@ -14,7 +14,8 @@ from .serializers import BoardSummarySerializer, BoardWriteSerializer
 class BoardViewSet(ModelViewSet):
     permission_classes = [IsAuthenticated]
     serializer_class = BoardWriteSerializer
-    http_method_names = ["post", "options"]
+    pagination_class = None
+    http_method_names = ["get", "post", "head", "options"]
 
     queryset = Board.objects.annotate(
         member_count=Count("members", distinct=True),
@@ -30,6 +31,17 @@ class BoardViewSet(ModelViewSet):
             distinct=True,
         ),
     ).order_by("id")
+
+    def get_queryset(self):
+        user = self.request.user
+        return super().get_queryset().filter(
+            Q(owner=user) | Q(members=user)
+        ).distinct()
+
+    def get_serializer_class(self):
+        if self.action == "list":
+            return BoardSummarySerializer
+        return BoardWriteSerializer
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):
