@@ -8,7 +8,7 @@ from rest_framework.viewsets import ModelViewSet
 from boards_app.models import Board
 from tasks_app.models import Task
 
-from .permissions import IsBoardOwnerOrMember
+from .permissions import IsBoardOwner, IsBoardOwnerOrMember
 from .serializers import (
     BoardDetailSerializer,
     BoardSummarySerializer,
@@ -21,7 +21,14 @@ class BoardViewSet(ModelViewSet):
     permission_classes = [IsAuthenticated, IsBoardOwnerOrMember]
     serializer_class = BoardWriteSerializer
     pagination_class = None
-    http_method_names = ["get", "post", "patch", "head", "options"]
+    http_method_names = [
+        "get",
+        "post",
+        "patch",
+        "delete",
+        "head",
+        "options",
+    ]
 
     queryset = Board.objects.annotate(
         member_count=Count("members", distinct=True),
@@ -37,6 +44,11 @@ class BoardViewSet(ModelViewSet):
             distinct=True,
         ),
     ).order_by("id")
+
+    def get_permissions(self):
+        if self.action == "destroy":
+            return [IsAuthenticated(), IsBoardOwner()]
+        return super().get_permissions()
 
     def get_queryset(self):
         queryset = super().get_queryset()

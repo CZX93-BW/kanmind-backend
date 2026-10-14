@@ -16,6 +16,7 @@ urlpatterns = [
         BoardViewSet.as_view({
             "get": "retrieve",
             "patch": "partial_update",
+            "delete": "destroy",
         }),
         name="board-detail",
     ),
