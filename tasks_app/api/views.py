@@ -7,15 +7,20 @@ from rest_framework.viewsets import ModelViewSet
 
 from tasks_app.models import Task
 
-from .serializers import TaskSerializer, TaskWriteSerializer
+from .permissions import IsTaskBoardMember
+from .serializers import (
+    TaskSerializer,
+    TaskUpdateResponseSerializer,
+    TaskWriteSerializer,
+)
 
 
 class TaskViewSet(ModelViewSet):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsTaskBoardMember]
     serializer_class = TaskWriteSerializer
-    http_method_names = ["post", "options"]
-
+    http_method_names = ["post", "patch", "options"]
     queryset = Task.objects.select_related(
+        "board",
         "assignee",
         "reviewer",
     ).annotate(
@@ -33,3 +38,14 @@ class TaskViewSet(ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user)
+
+    @transaction.atomic
+    def partial_update(self, request, *args, **kwargs):
+        task = self.get_object()
+        serializer = self.get_serializer(
+            task, data=request.data, partial=True
+        )
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        response_data = TaskUpdateResponseSerializer(serializer.instance).data
+        return Response(response_data, status=status.HTTP_200_OK)

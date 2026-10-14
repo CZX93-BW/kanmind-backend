@@ -11,4 +11,9 @@ urlpatterns = [
         TaskViewSet.as_view({"post": "create"}),
         name="task-list",
     ),
+    path(
+        "tasks/<int:pk>/",
+        TaskViewSet.as_view({"patch": "partial_update"}),
+        name="task-detail",
+    ),
 ]

@@ -49,6 +49,21 @@ class TaskSerializer(BoardTaskSerializer):
         read_only_fields = fields
 
 
+class TaskUpdateResponseSerializer(BoardTaskSerializer):
+    class Meta(BoardTaskSerializer.Meta):
+        fields = (
+            "id",
+            "title",
+            "description",
+            "status",
+            "priority",
+            "assignee",
+            "reviewer",
+            "due_date",
+        )
+        read_only_fields = fields
+
+
 class TaskWriteSerializer(serializers.ModelSerializer):
     board = serializers.IntegerField(min_value=1, write_only=True)
     assignee_id = serializers.PrimaryKeyRelatedField(
@@ -78,6 +93,10 @@ class TaskWriteSerializer(serializers.ModelSerializer):
         )
 
     def validate_board(self, value):
+        if self.instance is not None and value != self.instance.board_id:
+            raise serializers.ValidationError(
+                "The board of a task cannot be changed."
+            )
         board = get_object_or_404(Board, pk=value)
         user = self.context["request"].user
         if not board.members.filter(pk=user.pk).exists():
@@ -85,8 +104,14 @@ class TaskWriteSerializer(serializers.ModelSerializer):
         return board
 
     def validate(self, attrs):
+        board = (
+            self.instance.board
+            if self.instance is not None
+            else attrs["board"]
+        )
         for field in ("assignee", "reviewer"):
-            self.validate_membership(attrs["board"], attrs.get(field), field)
+            if field in attrs:
+                self.validate_membership(board, attrs[field], field)
         return attrs
 
     def validate_membership(self, board, user, field):
