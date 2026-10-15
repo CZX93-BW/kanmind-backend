@@ -1,5 +1,6 @@
 from django.urls import path
 
+from .comment_views import CommentListCreateView
 from .views import TaskViewSet
 
 
@@ -20,6 +21,11 @@ urlpatterns = [
         "tasks/reviewing/",
         TaskViewSet.as_view({"get": "reviewing"}),
         name="task-reviewing",
+    ),
+    path(
+        "tasks/<int:task_id>/comments/",
+        CommentListCreateView.as_view(),
+        name="task-comments",
     ),
     path(
         "tasks/<int:pk>/",
