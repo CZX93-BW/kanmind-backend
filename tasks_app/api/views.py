@@ -18,7 +18,7 @@ from .serializers import (
 class TaskViewSet(ModelViewSet):
     permission_classes = [IsAuthenticated, IsTaskBoardMember]
     serializer_class = TaskWriteSerializer
-    http_method_names = ["post", "patch", "options"]
+    http_method_names = ["get", "post", "patch", "head", "options"]
     queryset = Task.objects.select_related(
         "board",
         "assignee",
@@ -48,4 +48,14 @@ class TaskViewSet(ModelViewSet):
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
         response_data = TaskUpdateResponseSerializer(serializer.instance).data
+        return Response(response_data, status=status.HTTP_200_OK)
+
+    def assigned_to_me(self, request, *args, **kwargs):
+        tasks = self.get_queryset().filter(assignee=request.user)
+        response_data = TaskSerializer(tasks, many=True).data
+        return Response(response_data, status=status.HTTP_200_OK)
+
+    def reviewing(self, request, *args, **kwargs):
+        tasks = self.get_queryset().filter(reviewer=request.user)
+        response_data = TaskSerializer(tasks, many=True).data
         return Response(response_data, status=status.HTTP_200_OK)
