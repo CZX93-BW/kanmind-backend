@@ -7,7 +7,7 @@ from rest_framework.viewsets import ModelViewSet
 
 from tasks_app.models import Task
 
-from .permissions import IsTaskBoardMember
+from .permissions import IsTaskBoardMember, IsTaskCreatorOrBoardOwner
 from .serializers import (
     TaskSerializer,
     TaskUpdateResponseSerializer,
@@ -18,7 +18,9 @@ from .serializers import (
 class TaskViewSet(ModelViewSet):
     permission_classes = [IsAuthenticated, IsTaskBoardMember]
     serializer_class = TaskWriteSerializer
-    http_method_names = ["get", "post", "patch", "head", "options"]
+    http_method_names = [
+        "get", "post", "patch", "delete", "head", "options"
+    ]
     queryset = Task.objects.select_related(
         "board",
         "assignee",
@@ -26,6 +28,11 @@ class TaskViewSet(ModelViewSet):
     ).annotate(
         comments_count=Count("comments"),
     ).order_by("id")
+
+    def get_permissions(self):
+        if self.action == "destroy":
+            return [IsAuthenticated(), IsTaskCreatorOrBoardOwner()]
+        return super().get_permissions()
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):
