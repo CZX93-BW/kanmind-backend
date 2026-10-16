@@ -33,7 +33,7 @@ urlpatterns = [
         name="task-comment-detail",
     ),
     path(
-        "tasks/<int:pk>/",
+        "tasks/<str:pk>/",
         TaskViewSet.as_view({
             "patch": "partial_update",
             "delete": "destroy",

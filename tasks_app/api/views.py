@@ -1,6 +1,7 @@
 from django.db import transaction
 from django.db.models import Count
 from rest_framework import status
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
@@ -33,6 +34,14 @@ class TaskViewSet(ModelViewSet):
         if self.action == "destroy":
             return [IsAuthenticated(), IsTaskCreatorOrBoardOwner()]
         return super().get_permissions()
+
+    def get_object(self):
+        task_id = self.kwargs["pk"]
+        if not task_id.isascii() or not task_id.isdecimal():
+            raise ValidationError({
+                "task_id": "A valid integer is required."
+            })
+        return super().get_object()
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):
