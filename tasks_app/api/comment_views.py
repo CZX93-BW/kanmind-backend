@@ -1,14 +1,14 @@
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from rest_framework import status
-from rest_framework.generics import ListCreateAPIView
+from rest_framework.generics import DestroyAPIView, ListCreateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from tasks_app.models import Comment, Task
 
 from .comment_serializers import CommentSerializer
-from .permissions import IsTaskBoardMember
+from .permissions import IsCommentAuthor, IsTaskBoardMember
 
 
 class CommentListCreateView(ListCreateAPIView):
@@ -36,3 +36,13 @@ class CommentListCreateView(ListCreateAPIView):
         serializer.is_valid(raise_exception=True)
         serializer.save(task=task, author=request.user)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class CommentDeleteView(DestroyAPIView):
+    serializer_class = CommentSerializer
+    permission_classes = [IsAuthenticated, IsCommentAuthor]
+    lookup_url_kwarg = "comment_id"
+    http_method_names = ["delete", "options"]
+
+    def get_queryset(self):
+        return Comment.objects.filter(task_id=self.kwargs["task_id"])
