@@ -110,8 +110,9 @@ class TaskWriteSerializer(serializers.ModelSerializer):
             else attrs["board"]
         )
         for field in ("assignee", "reviewer"):
-            if field in attrs:
-                self.validate_membership(board, attrs[field], field)
+            current_user = getattr(self.instance, field, None)
+            user = attrs.get(field, current_user)
+            self.validate_membership(board, user, field)
         return attrs
 
     def validate_membership(self, board, user, field):
