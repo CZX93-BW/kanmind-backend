@@ -30,6 +30,14 @@ class TaskViewSet(ModelViewSet):
         comments_count=Count("comments"),
     ).order_by("id")
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if self.action == "assigned_to_me":
+            return queryset.filter(assignee=self.request.user)
+        if self.action == "reviewing":
+            return queryset.filter(reviewer=self.request.user)
+        return queryset
+
     def get_permissions(self):
         if self.action == "destroy":
             return [IsAuthenticated(), IsTaskCreatorOrBoardOwner()]
@@ -67,11 +75,11 @@ class TaskViewSet(ModelViewSet):
         return Response(response_data, status=status.HTTP_200_OK)
 
     def assigned_to_me(self, request, *args, **kwargs):
-        tasks = self.get_queryset().filter(assignee=request.user)
+        tasks = self.get_queryset()
         response_data = TaskSerializer(tasks, many=True).data
         return Response(response_data, status=status.HTTP_200_OK)
 
     def reviewing(self, request, *args, **kwargs):
-        tasks = self.get_queryset().filter(reviewer=request.user)
+        tasks = self.get_queryset()
         response_data = TaskSerializer(tasks, many=True).data
         return Response(response_data, status=status.HTTP_200_OK)
