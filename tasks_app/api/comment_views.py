@@ -13,6 +13,9 @@ from .permissions import IsCommentAuthor, IsTaskBoardMember
 
 
 class CommentListCreateView(ListCreateAPIView):
+    queryset = Comment.objects.select_related("author").order_by(
+        "created_at", "id"
+    )
     serializer_class = CommentSerializer
     permission_classes = [IsAuthenticated, IsTaskBoardMember]
     pagination_class = None
@@ -26,9 +29,7 @@ class CommentListCreateView(ListCreateAPIView):
 
     def get_queryset(self):
         task = self.get_task()
-        return Comment.objects.filter(task=task).select_related(
-            "author"
-        ).order_by("created_at", "id")
+        return super().get_queryset().filter(task=task)
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):
@@ -40,6 +41,7 @@ class CommentListCreateView(ListCreateAPIView):
 
 
 class CommentDeleteView(DestroyAPIView):
+    queryset = Comment.objects.all()
     serializer_class = CommentSerializer
     permission_classes = [IsAuthenticated, IsCommentAuthor]
     lookup_url_kwarg = "comment_id"
@@ -55,4 +57,6 @@ class CommentDeleteView(DestroyAPIView):
         return super().get_object()
 
     def get_queryset(self):
-        return Comment.objects.filter(task_id=self.kwargs["task_id"])
+        return super().get_queryset().filter(
+            task_id=self.kwargs["task_id"]
+        )
