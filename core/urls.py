@@ -1,3 +1,5 @@
+"""Route admin requests and include the application API routes."""
+
 from django.contrib import admin
 from django.urls import include, path
 

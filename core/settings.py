@@ -1,3 +1,5 @@
+"""Configure Django, API authentication and local frontend access."""
+
 import os
 from pathlib import Path
 
@@ -7,6 +9,7 @@ from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Load local settings while preserving existing environment variables.
 load_dotenv(BASE_DIR / ".env")
 
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
@@ -37,6 +40,7 @@ INSTALLED_APPS = [
     "tasks_app.apps.TasksAppConfig",
 ]
 
+# Place CORS handling before CommonMiddleware to cover its responses.
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "corsheaders.middleware.CorsMiddleware",
@@ -48,6 +52,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
+# Allow the provided frontend's local origin to access API routes.
 CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:5501",
 ]
@@ -75,6 +80,7 @@ WSGI_APPLICATION = "core.wsgi.application"
 
 ASGI_APPLICATION = "core.asgi.application"
 
+# Keep the local development database out of version control.
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
@@ -111,6 +117,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# Require token authentication unless an endpoint overrides it.
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework.authentication.TokenAuthentication",
