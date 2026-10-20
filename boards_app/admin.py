@@ -10,3 +10,4 @@ class BoardAdmin(admin.ModelAdmin):
     autocomplete_fields = ("owner",)
     filter_horizontal = ("members",)
     list_select_related = ("owner",)
+    ordering = ("id",)
