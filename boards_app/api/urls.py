@@ -1,3 +1,5 @@
+"""Map board routes and HTTP methods to viewset actions."""
+
 from django.urls import path
 
 from .views import BoardViewSet
