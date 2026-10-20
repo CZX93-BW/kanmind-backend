@@ -1,3 +1,5 @@
+"""Validate task input and serialize task responses."""
+
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
@@ -12,6 +14,8 @@ User = get_user_model()
 
 
 class BoardTaskSerializer(serializers.ModelSerializer):
+    """Represent nested board tasks with users and comment counts."""
+
     assignee = UserSerializer(read_only=True, allow_null=True)
     reviewer = UserSerializer(read_only=True, allow_null=True)
     comments_count = serializers.IntegerField(read_only=True)
@@ -33,6 +37,8 @@ class BoardTaskSerializer(serializers.ModelSerializer):
 
 
 class TaskSerializer(BoardTaskSerializer):
+    """Include board IDs in creation and personal list responses."""
+
     class Meta(BoardTaskSerializer.Meta):
         fields = (
             "id",
@@ -50,6 +56,8 @@ class TaskSerializer(BoardTaskSerializer):
 
 
 class TaskUpdateResponseSerializer(BoardTaskSerializer):
+    """Return updated task data without board ID or comment count."""
+
     class Meta(BoardTaskSerializer.Meta):
         fields = (
             "id",
@@ -65,6 +73,8 @@ class TaskUpdateResponseSerializer(BoardTaskSerializer):
 
 
 class TaskWriteSerializer(serializers.ModelSerializer):
+    """Validate task fields, board access and user assignments."""
+
     board = serializers.IntegerField(min_value=1, write_only=True)
     assignee_id = serializers.PrimaryKeyRelatedField(
         source="assignee",
@@ -93,6 +103,7 @@ class TaskWriteSerializer(serializers.ModelSerializer):
         )
 
     def validate_board(self, value):
+        """Prevent board changes and require board membership."""
         if self.instance is not None and value != self.instance.board_id:
             raise serializers.ValidationError(
                 "The board of a task cannot be changed."
@@ -104,6 +115,7 @@ class TaskWriteSerializer(serializers.ModelSerializer):
         return board
 
     def validate(self, attrs):
+        """Validate membership for new and retained assignments."""
         board = (
             self.instance.board
             if self.instance is not None
@@ -116,6 +128,7 @@ class TaskWriteSerializer(serializers.ModelSerializer):
         return attrs
 
     def validate_membership(self, board, user, field):
+        """Allow empty assignments or require board membership."""
         if user is None:
             return
         if not board.members.filter(pk=user.pk).exists():

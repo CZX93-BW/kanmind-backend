@@ -1,5 +1,9 @@
+"""Configure the task application."""
+
 from django.apps import AppConfig
 
 
 class TasksAppConfig(AppConfig):
-    name = 'tasks_app'
+    """Register the application for tasks and comments."""
+
+    name = "tasks_app"

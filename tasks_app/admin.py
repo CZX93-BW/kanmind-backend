@@ -1,3 +1,5 @@
+"""Configure task and comment management in Django Admin."""
+
 from django.contrib import admin
 
 from .models import Comment, Task
@@ -5,6 +7,8 @@ from .models import Comment, Task
 
 @admin.register(Task)
 class TaskAdmin(admin.ModelAdmin):
+    """Display tasks with workflow filters and user selection."""
+
     list_display = (
         "id",
         "title",
@@ -24,6 +28,8 @@ class TaskAdmin(admin.ModelAdmin):
 
 @admin.register(Comment)
 class CommentAdmin(admin.ModelAdmin):
+    """Display comments with author search and a read-only timestamp."""
+
     list_display = ("id", "task", "author", "created_at")
     search_fields = ("content", "task__title", "author__email")
     autocomplete_fields = ("task", "author")

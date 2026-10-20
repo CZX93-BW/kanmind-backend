@@ -1,3 +1,5 @@
+"""Provide task operations and personal assignee and reviewer lists."""
+
 from django.db import transaction
 from django.db.models import Count
 from rest_framework import status
@@ -17,6 +19,8 @@ from .serializers import (
 
 
 class TaskViewSet(ModelViewSet):
+    """Manage tasks with action-specific access and responses."""
+
     permission_classes = [IsAuthenticated, IsTaskBoardMember]
     serializer_class = TaskWriteSerializer
     http_method_names = [
@@ -31,6 +35,7 @@ class TaskViewSet(ModelViewSet):
     ).order_by("id")
 
     def get_queryset(self):
+        """Filter personal lists by the current user's assignment."""
         queryset = super().get_queryset()
         if self.action == "assigned_to_me":
             return queryset.filter(assignee=self.request.user)
@@ -39,11 +44,13 @@ class TaskViewSet(ModelViewSet):
         return queryset
 
     def get_permissions(self):
+        """Require task creation or board ownership for deletion."""
         if self.action == "destroy":
             return [IsAuthenticated(), IsTaskCreatorOrBoardOwner()]
         return super().get_permissions()
 
     def get_object(self):
+        """Reject malformed task IDs before object lookup."""
         task_id = self.kwargs["pk"]
         if not task_id.isascii() or not task_id.isdecimal():
             raise ValidationError({
@@ -53,6 +60,7 @@ class TaskViewSet(ModelViewSet):
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):
+        """Create a task and return its data with the comment count."""
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
@@ -61,10 +69,12 @@ class TaskViewSet(ModelViewSet):
         return Response(response_data, status=status.HTTP_201_CREATED)
 
     def perform_create(self, serializer):
+        """Record the authenticated user as the task creator."""
         serializer.save(created_by=self.request.user)
 
     @transaction.atomic
     def partial_update(self, request, *args, **kwargs):
+        """Update supplied task fields and return the response data."""
         task = self.get_object()
         serializer = self.get_serializer(
             task, data=request.data, partial=True
@@ -75,11 +85,13 @@ class TaskViewSet(ModelViewSet):
         return Response(response_data, status=status.HTTP_200_OK)
 
     def assigned_to_me(self, request, *args, **kwargs):
+        """Return tasks assigned to the authenticated user."""
         tasks = self.get_queryset()
         response_data = TaskSerializer(tasks, many=True).data
         return Response(response_data, status=status.HTTP_200_OK)
 
     def reviewing(self, request, *args, **kwargs):
+        """Return tasks reviewed by the authenticated user."""
         tasks = self.get_queryset()
         response_data = TaskSerializer(tasks, many=True).data
         return Response(response_data, status=status.HTTP_200_OK)

@@ -1,3 +1,5 @@
+"""Define task operations, personal lists and nested comment routes."""
+
 from django.urls import path
 
 from .comment_views import CommentDeleteView, CommentListCreateView

@@ -1,15 +1,23 @@
+"""Define tasks, their assignments and associated comments."""
+
 from django.conf import settings
 from django.db import models
 
 
 class Task(models.Model):
+    """Represent a board task with status and optional assignments."""
+
     class Status(models.TextChoices):
+        """Define the supported task workflow states."""
+
         TO_DO = "to-do", "To do"
         IN_PROGRESS = "in-progress", "In progress"
         REVIEW = "review", "Review"
         DONE = "done", "Done"
 
     class Priority(models.TextChoices):
+        """Define the supported task priority levels."""
+
         LOW = "low", "Low"
         MEDIUM = "medium", "Medium"
         HIGH = "high", "High"
@@ -53,10 +61,13 @@ class Task(models.Model):
     )
 
     def __str__(self):
+        """Return the task title as its display label."""
         return self.title
 
 
 class Comment(models.Model):
+    """Represent a task comment with its author and timestamp."""
+
     task = models.ForeignKey(
         Task,
         on_delete=models.CASCADE,
@@ -74,4 +85,5 @@ class Comment(models.Model):
         ordering = ("created_at", "id")
 
     def __str__(self):
+        """Return a label with the comment and task IDs."""
         return f"Comment {self.pk} on task {self.task_id}"
