@@ -26,6 +26,14 @@ class RegistrationSerializer(serializers.ModelSerializer):
             "repeated_password",
         )
 
+    def validate_email(self, value):
+        email = User.objects.normalize_email(value)
+        if User.objects.filter(email=email).exists():
+            raise serializers.ValidationError(
+                "user with this email already exists."
+            )
+        return email
+
     def validate(self, attrs):
         if attrs["password"] != attrs["repeated_password"]:
             raise serializers.ValidationError(
