@@ -1,6 +1,7 @@
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from rest_framework import status
+from rest_framework.exceptions import ValidationError
 from rest_framework.generics import DestroyAPIView, ListCreateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -43,6 +44,15 @@ class CommentDeleteView(DestroyAPIView):
     permission_classes = [IsAuthenticated, IsCommentAuthor]
     lookup_url_kwarg = "comment_id"
     http_method_names = ["delete", "options"]
+
+    def get_object(self):
+        for field in ("task_id", "comment_id"):
+            value = self.kwargs[field]
+            if not value.isascii() or not value.isdecimal():
+                raise ValidationError({
+                    field: "A valid integer is required."
+                })
+        return super().get_object()
 
     def get_queryset(self):
         return Comment.objects.filter(task_id=self.kwargs["task_id"])
