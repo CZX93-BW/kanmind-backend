@@ -1,3 +1,5 @@
+"""Provide registration, login and protected email lookup."""
+
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.shortcuts import get_object_or_404
@@ -19,12 +21,15 @@ User = get_user_model()
 
 
 class RegistrationView(GenericAPIView):
+    """Allow public registration with an access token response."""
+
     serializer_class = RegistrationSerializer
     authentication_classes = []
     permission_classes = [AllowAny]
 
     @transaction.atomic
     def post(self, request):
+        """Create the user and token atomically and return both."""
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
@@ -39,11 +44,14 @@ class RegistrationView(GenericAPIView):
 
 
 class LoginView(GenericAPIView):
+    """Allow users to exchange valid credentials for an access token."""
+
     serializer_class = LoginSerializer
     authentication_classes = []
     permission_classes = [AllowAny]
 
     def post(self, request):
+        """Authenticate and return account data with an access token."""
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data["user"]
@@ -58,11 +66,14 @@ class LoginView(GenericAPIView):
 
 
 class EmailCheckView(GenericAPIView):
+    """Allow authenticated users to look up email addresses."""
+
     queryset = User.objects.all()
     serializer_class = EmailCheckSerializer
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
+        """Validate the email query and return public user data."""
         serializer = self.get_serializer(data=request.query_params)
         serializer.is_valid(raise_exception=True)
         user = get_object_or_404(

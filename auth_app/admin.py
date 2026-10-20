@@ -1,3 +1,5 @@
+"""Configure Django Admin for the custom email-based user model."""
+
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
@@ -7,6 +9,8 @@ from .models import User
 
 @admin.register(User)
 class CustomUserAdmin(UserAdmin):
+    """Manage users with custom forms, field groups and email search."""
+
     model = User
     add_form = CustomUserCreationForm
     form = CustomUserChangeForm

@@ -1,10 +1,15 @@
+"""Provide creation methods for regular users and superusers."""
+
 from django.contrib.auth.base_user import BaseUserManager
 
 
 class UserManager(BaseUserManager):
+    """Create users with normalized domains and hashed passwords."""
+
     use_in_migrations = True
 
     def create_user(self, email, password=None, **extra_fields):
+        """Create and save a user, rejecting a missing email address."""
         if not email:
             raise ValueError("An email address is required.")
         email = self.normalize_email(email)
@@ -16,6 +21,7 @@ class UserManager(BaseUserManager):
         return user
 
     def create_superuser(self, email, password=None, **extra_fields):
+        """Create a superuser and reject disabled admin flags."""
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
         if extra_fields.get("is_staff") is not True:

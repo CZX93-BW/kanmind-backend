@@ -1,3 +1,5 @@
+"""Define registration, login and email lookup routes."""
+
 from django.urls import path
 
 from .views import EmailCheckView, LoginView, RegistrationView
