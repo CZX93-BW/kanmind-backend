@@ -1,0 +1,25 @@
+name: kanmind
+
+services:
+  kanmind-backend:
+    build: .
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DJANGO_DB_PATH: /app/data/db.sqlite3
+      DJANGO_BEHIND_PROXY: "True"
+    volumes:
+      - database:/app/data
+      - static:/app/staticfiles
+    networks:
+      - proxy
+
+volumes:
+  database:
+  static:
+
+networks:
+  proxy:
+    external: true
+    name: web_proxy
