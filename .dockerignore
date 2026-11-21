@@ -1,0 +1,10 @@
+.git
+.venv
+.vscode
+.env
+.env.*
+!.env.example
+db.sqlite3*
+staticfiles/
+**/__pycache__/
+*.pyc
